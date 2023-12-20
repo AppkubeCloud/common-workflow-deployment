@@ -126,4 +126,4 @@ spec:
   - name: image
     value: docker.io/synectiks/appkube-common-workflow-service:latest
   - name: build-serverless-container
-    value: false
+    value: "false"
