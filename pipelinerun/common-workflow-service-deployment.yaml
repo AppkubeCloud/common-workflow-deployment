@@ -31,6 +31,9 @@ spec:
   - name: dockerconfig-secret
     description: |
       this workspace will hold docker config.json
+  - name: common-workflow-serverless-properties
+    description: |
+      configmap for serverless properties
   tasks:
   - name: service-repo
     taskRef:
@@ -72,6 +75,8 @@ spec:
       workspace: shared-data
     - name: secrets
       workspace: aws-secrets
+    - name: configmap
+      workspace: common-workflow-serverless-properties
     params:
     - name: workingDir
       value: $(params.workingDir)
@@ -83,15 +88,32 @@ spec:
         export AWS_SHARED_CREDENTIALS_FILE=/tekton/home/.aws/credentials
         aws configure list 
         
-        export LAMBDA_ROLE=$1
-        echo "Using lambda role: $1"
+        # export LAMBDA_ROLE=$1
+        # echo "Using lambda role: $1"
+
+        # echo COGNITO_CLIENT_ID=$(cat /etc/serverless-properties/COGNITO_CLIENT_ID)
+        # echo COGNITO_POOL_ID=$(cat /etc/serverless-properties/COGNITO_POOL_ID)
+        echo BUCKET_NAME=$(cat /etc/serverless-properties/BUCKET_NAME)
+        echo BUCKET_FOLDER_NAME=$(cat /etc/serverless-properties/BUCKET_FOLDER_NAME)
+        echo LAMBDA_ROLE=$(cat /etc/serverless-properties/LAMBDA_ROLE)
+
+        # export COGNITO_CLIENT_ID=$(cat /etc/serverless-properties/COGNITO_CLIENT_ID)
+        # export COGNITO_POOL_ID=$(cat /etc/serverless-properties/COGNITO_POOL_ID)
+        export BUCKET_NAME=$(cat /etc/serverless-properties/BUCKET_NAME)
+        export BUCKET_FOLDER_NAME=$(cat /etc/serverless-properties/BUCKET_FOLDER_NAME)
+        export LAMBDA_ROLE=$(cat /etc/serverless-properties/LAMBDA_ROLE)
+        echo "Using lambda role: $LAMBDA_ROLE"
+
+        echo $BUCKET_NAME
+        echo $BUCKET_FOLDER_NAME
+        echo $LAMBDA_ROLE
         
         serverless plugin install -n serverless-offline
         serverless deploy
         
-    - name: ARGS
-      value:
-        - arn:aws:iam::657907747545:role/service-role/StepFunction_uc1_Requirement-role-2coy70yw
+    # - name: ARGS
+    #   value:
+    #     - arn:aws:iam::657907747545:role/service-role/StepFunction_uc1_Requirement-role-2coy70yw
 ---
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
@@ -116,6 +138,9 @@ spec:
   - name: aws-secrets
     secret:
       secretName: smoke-aws-credentials
+  - name: common-workflow-serverless-properties
+    configmap:
+      name: common-workflow-api-properties
   params:
   - name: repo-url
     value: https://github.com/AppkubeCloud/common-workflow-service.git
